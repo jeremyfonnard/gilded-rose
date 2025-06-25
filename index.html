@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gilded Rose - Inventaire</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      color: darkgoldenrod;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: goldenrod;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏵️ Inventaire - Gilded Rose</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Jours restants (sellIn)</th>
+        <th>Qualité</th>
+      </tr>
+    </thead>
+    <tbody id="inventory-body">
+      <!-- Les items seront injectés ici -->
+    </tbody>
+  </table>
+
+  <button onclick="nextDay()">📆 Passer un jour</button>
+
+  <script type="module">
+    class Item {
+      constructor(name, sellIn, quality) {
+        this.name = name;
+        this.sellIn = sellIn;
+        this.quality = quality;
+      }
+    }
+
+    class Shop {
+      constructor(items = []) {
+        this.items = items;
+      }
+
+      updateQuality() {
+        for (let item of this.items) {
+          switch (true) {
+            case item.name === 'Sulfuras, Hand of Ragnaros':
+              break;
+            case item.name === 'Aged Brie':
+              this._updateAgedBrie(item);
+              break;
+            case item.name.startsWith('Backstage passes'):
+              this._updateBackstagePass(item);
+              break;
+            case item.name.startsWith('Conjured'):
+              this._updateConjuredItem(item);
+              break;
+            default:
+              this._updateNormalItem(item);
+          }
+        }
+        return this.items;
+      }
+
+      _decreaseSellIn(item) {
+        item.sellIn -= 1;
+      }
+
+      _increaseQuality(item, amount = 1) {
+        item.quality = Math.min(50, item.quality + amount);
+      }
+
+      _decreaseQuality(item, amount = 1) {
+        item.quality = Math.max(0, item.quality - amount);
+      }
+
+      _updateNormalItem(item) {
+        this._decreaseQuality(item, item.sellIn <= 0 ? 2 : 1);
+        this._decreaseSellIn(item);
+      }
+
+      _updateConjuredItem(item) {
+        this._decreaseQuality(item, item.sellIn <= 0 ? 4 : 2);
+        this._decreaseSellIn(item);
+      }
+
+      _updateAgedBrie(item) {
+        this._increaseQuality(item, item.sellIn <= 0 ? 2 : 1);
+        this._decreaseSellIn(item);
+      }
+
+      _updateBackstagePass(item) {
+        if (item.sellIn <= 0) {
+          item.quality = 0;
+        } else if (item.sellIn <= 5) {
+          this._increaseQuality(item, 3);
+        } else if (item.sellIn <= 10) {
+          this._increaseQuality(item, 2);
+        } else {
+          this._increaseQuality(item);
+        }
+        this._decreaseSellIn(item);
+      }
+    }
+
+    const items = [
+      new Item("+5 Dexterity Vest", 10, 20),
+      new Item("Aged Brie", 2, 0),
+      new Item("Elixir of the Mongoose", 5, 7),
+      new Item("Sulfuras, Hand of Ragnaros", 0, 80),
+      new Item("Backstage passes to a TAFKAL80ETC concert", 15, 20),
+      new Item("Backstage passes to a TAFKAL80ETC concert", 5, 49),
+      new Item("Conjured Mana Cake", 3, 6)
+    ];
+
+    const shop = new Shop(items);
+
+    function renderTable() {
+      const tbody = document.getElementById('inventory-body');
+      tbody.innerHTML = '';
+      shop.items.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.sellIn}</td>
+          <td>${item.quality}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function nextDay() {
+      shop.updateQuality();
+      renderTable();
+    }
+
+    // Initial render
+    renderTable();
+  </script>
+
+</body>
+</html>
